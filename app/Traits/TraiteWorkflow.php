@@ -4,7 +4,6 @@ namespace App\Traits;
 use App\Repositories\WorkflowDashboardRepository;
 use App\Repositories\WorkflowHistoryRepository;
 use App\Repositories\WorkflowInstanceRepository;
-use App\Repositories\UserRepository;
 use App\Repositories\WorkflowRepository;
 use App\Repositories\WorkflowStatusRepository;
 use App\Repositories\WorkflowStepRepository;
@@ -33,7 +32,6 @@ trait TraiteWorkflow
 
     public function workflowProcess($item,$workflow_id,$dashboard_id = 0)
     {
-        $process = [];
         $this->generateWorkflow($workflow_id,$dashboard_id);
 
         if(empty($this->error_message))
@@ -41,8 +39,6 @@ trait TraiteWorkflow
             $this->getWorkflowInstance($item,$workflow_id,$dashboard_id);
             $this->workflowFunction();
             $this->insertToHistory();
-
-            return $process;
         }
     }
 
@@ -155,9 +151,9 @@ trait TraiteWorkflow
         {
             $this->dispatchBrowserEvent('alert', [
                 'type' => 'error',
-                'message' => 'خطا در دریافت اطلاعات مرحله قبل'
+                'message' => __('The previous step not found')
             ]);
-            return redirect()->to('/admin');
+
         }
         else
         {
@@ -175,10 +171,10 @@ trait TraiteWorkflow
         if(empty($this->next_workflow_step_role_id)) $this->next_workflow_step_role_id = $this->next_workflow_step->role_id;
 
         if(empty($this->next_workflow_step)){
-            $this->error_message =  'خطا در دریافت اطلاعات مرحله ی بعد';
+            $this->error_message =  __('The next step not defined');
         }
         elseif(!$this->next_workflow_step_is_public && empty($this->next_workflow_step_role_id)){
-            $this->error_message =  'خطا در دریافت اطلاعات دسترسی مرحله ی بعد';
+            $this->error_message =  __('The next step permission not defined');
         }
     }
 
@@ -194,7 +190,7 @@ trait TraiteWorkflow
         $this->workflow = WorkflowRepository::FindById($this->workflow_id);
         if(empty($this->workflow) || empty($this->workflow->module))
         {
-            $this->error_message = 'خطا در دریافت اطلاعات فرآیند';
+            $this->error_message = __('The workflow not defined correctly');
         }
         else
         {
@@ -215,22 +211,22 @@ trait TraiteWorkflow
 
             if(!$this->havePermission($is_starter))
             {
-                $this->error_message = 'شما مجاز به مشاهده ی این فرآیند نیستید.';
+                $this->error_message = __("You don't have permission");
             }
             if(empty($this->workflow_step) || empty($this->main_module_action) || empty($this->main_module_action->component_path))
             {
-                $this->error_message = 'خطا در دریافت مرحله ی فرآیند';
+                $this->error_message =  __("The step not defined");
             }
             elseif(empty($this->workflow_step->workflowSelectableStatus))
             {
-                $this->error_message = 'خطا در دریافت وضعیتهای فرآیند';
+                $this->error_message = __('The statuses not defined');
             }
 
             if(!$is_starter)
             {
                 if(empty($this->workflow_dashboard))
                 {
-                    $this->error_message = 'شما مجاز به این اقدام نیستید';
+                    $this->error_message = __("You don't have permission");
                 }
                 else
                 {
